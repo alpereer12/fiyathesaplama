@@ -2,11 +2,15 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    
+    <!-- BU SATIR GOOGLE'IN SİTEYİ BULMASINI ENGELLER -->
+    <meta name="robots" content="noindex, nofollow">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Ofset Kutu Maliyet Paneli (Tam Sürüm v26)</title>
+    <title>Ofset Kutu Maliyet Paneli (Tam Sürüm v29)</title>
     
     <!-- Kütüphaneler -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,7 +49,6 @@
         }
         html.dark #loading-screen { background: #0f172a; color: #e2e8f0; }
         
-        /* Hata animasyonu */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
@@ -56,19 +59,16 @@
 </head>
 <body class="bg-slate-100 dark:bg-darkbg text-slate-800 dark:text-slate-100 font-sans pb-10 transition-colors duration-300">
 
-    <!-- Yükleme Ekranı -->
     <div id="loading-screen">
         <div class="text-2xl font-bold text-blue-600 mb-2 animate-bounce">Hesaplama Aracı Yükleniyor...</div>
         <div class="text-slate-500 dark:text-slate-400 text-sm">Lütfen bekleyin.</div>
     </div>
 
-    <!-- Uygulama Alanı -->
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef, Component } = React;
 
-        // --- HATA YAKALAYICI (Error Boundary) ---
         class ErrorBoundary extends Component {
             constructor(props) {
                 super(props);
@@ -84,7 +84,6 @@
                         <div className="min-h-screen flex items-center justify-center bg-red-50 p-6 text-center">
                             <div>
                                 <h1 className="text-2xl font-bold text-red-600 mb-2">Bir Hata Oluştu</h1>
-                                <p className="text-red-800 mb-4">Uygulama yüklenirken bir sorun yaşandı.</p>
                                 <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg font-bold">Sayfayı Yenile</button>
                             </div>
                         </div>
@@ -94,7 +93,6 @@
             }
         }
 
-        // --- GÜVENLİ İKON BİLEŞENİ ---
         const Icon = ({ name, className, size = 24 }) => {
             const iconRef = useRef(null);
             useEffect(() => {
@@ -112,7 +110,6 @@
             return <span ref={iconRef} style={{ display: 'inline-flex', verticalAlign: 'middle' }}></span>;
         };
 
-        // --- VARSAYILAN FİYATLAR ---
         const varsayilanFiyatlar = {
             genel: { dolar_kuru: 34.00 },
             karton_ton: { 
@@ -129,7 +126,11 @@
                 yok: 0, dispersiyon_70x100: 1.5, dispersiyon_100x140: 2.0, mat_lak: 2.0, uv_lak: 2.5,
                 parlak_selefon: 3.0, mat_selefon: 3.5, min_tutar_70x100: 2500, min_tutar_100x140: 3500
             },
-            iscilik: { tek_dikis: 0.50, cift_dikis: 0.80, yapistirma: 0.60, sivama: 0.30, kesim: 0.20 }
+            iscilik: { 
+                tek_dikis: 0.50, cift_dikis: 0.80, yapistirma: 0.60, 
+                sivama: 0.30, 
+                kesim: 2.00 // Tabaka başı kesim fiyatı
+            }
         };
 
         function KutuHesaplama() {
@@ -153,8 +154,7 @@
             const [ayarlarAcik, setAyarlarAcik] = useState(false);
             const [fiyatlar, setFiyatlar] = useState(varsayilanFiyatlar);
             const [darkMode, setDarkMode] = useState(false);
-            
-            // Makine Uyarı State'leri
+
             const [makineHata, setMakineHata] = useState(false);
             const [makineUyariMesaji, setMakineUyariMesaji] = useState('');
 
@@ -173,7 +173,6 @@
                 }
             }, []);
 
-            // DARK MODE
             useEffect(() => {
                 const savedTheme = localStorage.getItem('theme');
                 if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -184,6 +183,7 @@
                     document.documentElement.classList.remove('dark');
                 }
             }, []);
+
             const toggleDarkMode = () => {
                 if (darkMode) {
                     document.documentElement.classList.remove('dark');
@@ -196,7 +196,6 @@
                 }
             };
 
-            // OTOMATİK TABAKA GÜNCELLEME
             useEffect(() => {
                 const uretimAdedi = Number(adet) || 0;
                 const bicak = Number(bicakSayisi) || 1;
@@ -204,14 +203,12 @@
                 setBaskiTabaka(netTabaka);
             }, [adet, bicakSayisi]);
 
-            // VERİ YÜKLEME
             useEffect(() => {
                 const kayitliFiyatlar = localStorage.getItem('kutu_fiyat_v16');
                 if (kayitliFiyatlar) {
                     try { 
                         const par = JSON.parse(kayitliFiyatlar);
                         setFiyatlar({ ...varsayilanFiyatlar, ...par, 
-                            genel: {...varsayilanFiyatlar.genel, ...(par.genel || {})},
                             karton_ton: {...varsayilanFiyatlar.karton_ton, ...(par.karton_ton || {})},
                             ondule_m2: {...varsayilanFiyatlar.ondule_m2, ...(par.ondule_m2 || {})},
                             ekstra_saman: {...varsayilanFiyatlar.ekstra_saman, ...(par.ekstra_saman || {})},
@@ -250,17 +247,14 @@
                 localStorage.setItem('kutu_girdiler_v6', JSON.stringify(veriler));
             }, [ebatTabaka, adet, bicakSayisi, baskiTabaka, kartonTip, onduleTip, ekstraSamanSecimi, makineTipi, ekstraRenk, lakTipi, dikisTipi, siparisTipi, nakliye, kalipUcreti]);
 
-            // --- MAKİNE SEÇİM KONTROLÜ (YENİ) ---
             useEffect(() => {
                 const en = Number(ebatTabaka.en);
                 const boy = Number(ebatTabaka.boy);
 
-                // Kural 1: Ebat 72x102'den büyükse otomatik 100x140'a geç
                 if ((en > 72 || boy > 102) && makineTipi !== '100x140') {
                     setMakineTipi('100x140');
                 }
                 
-                // Kural 2: Tam 72x102 uyarısı (Sadece 70x100 seçiliyse veya ebat tam buysa)
                 if (en === 72 && boy === 102 && makineTipi === '70x100') {
                     setMakineUyariMesaji('Baskı alanını kontrol ediniz makas dahil 72 x 102 olmalıdır');
                 } else {
@@ -275,8 +269,8 @@
                 if (tip === '70x100') {
                     if (en > 72 || boy > 102) {
                         setMakineHata(true);
-                        setMakineTipi('100x140'); // Zorla geri al
-                        setTimeout(() => setMakineHata(false), 3000); // 3sn sonra hatayı kaldır
+                        setMakineTipi('100x140');
+                        setTimeout(() => setMakineHata(false), 3000);
                         return;
                     }
                 }
@@ -328,6 +322,7 @@
                 
                 const toplamTabakaSayisi = Number(baskiTabaka) || (Math.ceil(uretimAdedi / tabakaBicak) + 200);
 
+                // 1. KARTON
                 let gramajDegeri = 0, tonFiyati = 0;
                 const kur = fiyatlar.genel.dolar_kuru || 34;
                 if (kartonTip.includes('krome')) {
@@ -345,6 +340,7 @@
                 const birimKartonMaliyeti = tabakaMaliyeti / tabakaBicak;
                 const toplamKartonTutar = birimKartonMaliyeti * uretimAdedi;
 
+                // 2. ONDÜLE
                 let onduleM2 = fiyatlar.ondule_m2[onduleTip] || 0;
                 if (ekstraSamanSecimi === 'tek') onduleM2 += (fiyatlar.ekstra_saman.tek_saman || 0);
                 if (ekstraSamanSecimi === 'cift') onduleM2 += (fiyatlar.ekstra_saman.cift_saman || 0);
@@ -353,6 +349,7 @@
                 const birimOnduleMaliyeti = tabakaOnduleMaliyeti / tabakaBicak;
                 const toplamOnduleTutar = birimOnduleMaliyeti * uretimAdedi;
 
+                // 3. BASKI
                 let baskiMaliyeti = 0;
                 const mParams = makineTipi === '70x100' ? fiyatlar.makine_70x100 : fiyatlar.makine_100x140;
                 const ekstraKRenkSayisi = Number(ekstraRenk) || 0;
@@ -366,6 +363,7 @@
                 }
                 baskiMaliyeti = tabanFiyatToplam + fazlalikTutar;
 
+                // 4. LAK
                 let lakHamTutar = 0;
                 let lakMinUygulandi = false;
                 if (lakTipi !== 'yok') {
@@ -387,18 +385,20 @@
                     }
                 }
 
+                // 5. İŞÇİLİK
                 let sivamaTutar = 0;
                 let sivamaMinUygulandi = false;
                 if (onduleTip !== 'yok') {
-                    sivamaTutar = toplamTabakaSayisi * fiyatlar.iscilik.sivama;
+                    sivamaTutar = tabakaM2Alani * fiyatlar.iscilik.sivama * toplamTabakaSayisi;
                     if (sivamaTutar < 3500) {
                         sivamaTutar = 3500;
                         sivamaMinUygulandi = true;
                     }
                 }
 
-                const kesimBirim = fiyatlar.iscilik.kesim / tabakaBicak; 
-                const kesimTutar = kesimBirim * toplamTabakaSayisi;
+                // KESİM Hesabı (GÜNCELLENDİ)
+                // Tabaka Fiyatı * Tabaka Sayısı (Birim maliyet gösterimi tabloda otomatik bölünecek)
+                const kesimTutar = fiyatlar.iscilik.kesim * toplamTabakaSayisi;
 
                 let dikisBirim = 0;
                 if (dikisTipi !== 'yok') {
@@ -408,6 +408,7 @@
                 }
                 const yapistirmaTutar = uretimAdedi * dikisBirim;
 
+                // 6. EKSTRALAR
                 const altToplam = toplamKartonTutar + toplamOnduleTutar + baskiMaliyeti;
                 const birimUrunMaliyeti = uretimAdedi > 0 ? (altToplam / uretimAdedi) : 0;
                 const fireTutari = birimUrunMaliyeti * 100;
@@ -464,7 +465,6 @@
                                     <button onClick={()=>setSiparisTipi('rpt')} className={`flex-1 py-2 text-xs font-bold rounded transition ${siparisTipi === 'rpt' ? 'bg-blue-600 text-white shadow' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'}`}>RPT SİPARİŞ</button>
                                 </div>
 
-                                {/* MAKİNE SEÇİM ALANI (YENİ KONTROL) */}
                                 <div className={`mb-4 p-2 rounded border transition-colors ${makineHata ? 'border-red-500 bg-red-50 dark:bg-red-900/10 animate-shake' : 'border-transparent'}`}>
                                     <label className={`block text-xs font-bold mb-1 ${makineHata ? 'text-red-600' : 'text-slate-500 dark:text-slate-400'}`}>Baskı Makinesi</label>
                                     <div className="flex gap-2">
