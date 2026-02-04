@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#3b82f6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Ofset Kutu Maliyet Paneli (Tam Sürüm v29)</title>
+    <title>Ofset Kutu Maliyet Paneli (Tam Sürüm v30 - Kesim Fix)</title>
     
     <!-- Kütüphaneler -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -129,7 +129,7 @@
             iscilik: { 
                 tek_dikis: 0.50, cift_dikis: 0.80, yapistirma: 0.60, 
                 sivama: 0.30, 
-                kesim: 2.00 // Tabaka başı kesim fiyatı
+                kesim: 2.00 
             }
         };
 
@@ -219,7 +219,6 @@
                         }); 
                     } catch (e) { }
                 }
-                
                 const kayitliGirdiler = localStorage.getItem('kutu_girdiler_v6');
                 if (kayitliGirdiler) {
                     try {
@@ -254,7 +253,6 @@
                 if ((en > 72 || boy > 102) && makineTipi !== '100x140') {
                     setMakineTipi('100x140');
                 }
-                
                 if (en === 72 && boy === 102 && makineTipi === '70x100') {
                     setMakineUyariMesaji('Baskı alanını kontrol ediniz makas dahil 72 x 102 olmalıdır');
                 } else {
@@ -265,7 +263,6 @@
             const handleMakineSecimi = (tip) => {
                 const en = Number(ebatTabaka.en);
                 const boy = Number(ebatTabaka.boy);
-
                 if (tip === '70x100') {
                     if (en > 72 || boy > 102) {
                         setMakineHata(true);
@@ -320,9 +317,12 @@
                 const uretimAdedi = Number(adet) || 1;
                 const tabakaBicak = Number(bicakSayisi) || 1; 
                 
+                // Brüt Tabaka (Baskı & Lak için)
                 const toplamTabakaSayisi = Number(baskiTabaka) || (Math.ceil(uretimAdedi / tabakaBicak) + 200);
+                // Net Tabaka (Sıvama & Kesim için - Fire Hariç)
+                const netTabakaSayisi = Math.ceil(uretimAdedi / tabakaBicak);
 
-                // 1. KARTON
+                // 1. KARTON (Net)
                 let gramajDegeri = 0, tonFiyati = 0;
                 const kur = fiyatlar.genel.dolar_kuru || 34;
                 if (kartonTip.includes('krome')) {
@@ -340,7 +340,7 @@
                 const birimKartonMaliyeti = tabakaMaliyeti / tabakaBicak;
                 const toplamKartonTutar = birimKartonMaliyeti * uretimAdedi;
 
-                // 2. ONDÜLE
+                // 2. ONDÜLE (Net)
                 let onduleM2 = fiyatlar.ondule_m2[onduleTip] || 0;
                 if (ekstraSamanSecimi === 'tek') onduleM2 += (fiyatlar.ekstra_saman.tek_saman || 0);
                 if (ekstraSamanSecimi === 'cift') onduleM2 += (fiyatlar.ekstra_saman.cift_saman || 0);
@@ -349,7 +349,7 @@
                 const birimOnduleMaliyeti = tabakaOnduleMaliyeti / tabakaBicak;
                 const toplamOnduleTutar = birimOnduleMaliyeti * uretimAdedi;
 
-                // 3. BASKI
+                // 3. BASKI (Brüt)
                 let baskiMaliyeti = 0;
                 const mParams = makineTipi === '70x100' ? fiyatlar.makine_70x100 : fiyatlar.makine_100x140;
                 const ekstraKRenkSayisi = Number(ekstraRenk) || 0;
@@ -363,7 +363,7 @@
                 }
                 baskiMaliyeti = tabanFiyatToplam + fazlalikTutar;
 
-                // 4. LAK
+                // 4. LAK (Brüt)
                 let lakHamTutar = 0;
                 let lakMinUygulandi = false;
                 if (lakTipi !== 'yok') {
@@ -386,19 +386,20 @@
                 }
 
                 // 5. İŞÇİLİK
+                
+                // Sıvama (NET Üzerinden)
                 let sivamaTutar = 0;
                 let sivamaMinUygulandi = false;
                 if (onduleTip !== 'yok') {
-                    sivamaTutar = tabakaM2Alani * fiyatlar.iscilik.sivama * toplamTabakaSayisi;
+                    sivamaTutar = tabakaM2Alani * fiyatlar.iscilik.sivama * netTabakaSayisi;
                     if (sivamaTutar < 3500) {
                         sivamaTutar = 3500;
                         sivamaMinUygulandi = true;
                     }
                 }
 
-                // KESİM Hesabı (GÜNCELLENDİ)
-                // Tabaka Fiyatı * Tabaka Sayısı (Birim maliyet gösterimi tabloda otomatik bölünecek)
-                const kesimTutar = fiyatlar.iscilik.kesim * toplamTabakaSayisi;
+                // KESİM (NET Üzerinden)
+                const kesimTutar = fiyatlar.iscilik.kesim * netTabakaSayisi;
 
                 let dikisBirim = 0;
                 if (dikisTipi !== 'yok') {
