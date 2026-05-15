@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="tr" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#f97316">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Koli Maliyet Paneli Pro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Kütüphaneler -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                            900: '#7c2d12',
+                            950: '#431407',
+                        },
+                        darkbg: '#09090b',
+                        darkcard: '#18181b',
+                        darkinput: '#27272a'
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.05)',
+                        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+                        'glow-orange': '0 0 20px rgba(249, 115, 22, 0.4)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { 
+            transition: background-color 0.4s ease, color 0.4s ease; 
+            -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(circle at top right, rgba(249, 115, 22, 0.05) 0%, transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+        html.dark body {
+            background-image: radial-gradient(circle at top right, rgba(249, 115, 22, 0.1) 0%, transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(234, 88, 12, 0.1) 0%, transparent 40%);
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        html.dark ::webkit-scrollbar-thumb { background: #3f3f46; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        html.dark .glass-panel {
+            background: rgba(24, 24, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #loading-screen { 
+            position: fixed; inset: 0; 
+            background: rgba(248, 250, 252, 0.9); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 9999; transition: opacity 0.6s ease;
+        }
+        html.dark #loading-screen { background: rgba(9, 9, 11, 0.9); color: #e2e8f0; }
+    </style>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .input-modern {
+                @apply w-full px-4 py-3 rounded-2xl bg-white dark:bg-darkinput border border-slate-200 dark:border-slate-700/50 
+                       focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all duration-300 
+                       text-slate-800 dark:text-slate-100 font-semibold shadow-sm hover:border-slate-300 dark:hover:border-slate-600;
+            }
+            .label-modern {
+                @apply text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 block ml-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-100 pb-10">
+
+    <div id="loading-screen">
+        <div class="relative w-16 h-16 mb-4">
+            <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin"></div>
+        </div>
+        <div class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-600">Sistem Yükleniyor...</div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, Component } = React;
+
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, errorInfo) { console.error("Uygulama Hatası:", error, errorInfo); }
+            render() {
+                if (this.state.hasError) {
+                    const loader = document.getElementById('loading-screen');
+                    if (loader) loader.style.display = 'none';
+                    return (
+                        <div className="min-h-screen flex items-center justify-center bg-red-50 p-6 text-center">
+                            <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md">
+                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="alert-triangle" size={32} /></div>
+                                <h1 className="text-2xl font-bold text-slate-800 mb-2">Sistem Hatası</h1>
+                                <p className="text-slate-500 text-sm mb-6">Uygulama yüklenirken beklenmeyen bir hata oluştu. Lütfen sayfayı yenileyin.</p>
+                                <button onClick={() => window.location.reload()} className="w-full py-3 bg-red-600 hover:bg-red-700 transition-colors text-white rounded-xl font-bold">Sistemi Yeniden Başlat</button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children; 
+            }
+        }
+
+        const Icon = ({ name, className, size = 20 }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide && iconRef.current) {
+                    const i = document.createElement('i');
+                    i.setAttribute('data-lucide', name);
+                    i.setAttribute('class', className || '');
+                    i.setAttribute('width', size);
+                    i.setAttribute('height', size);
+                    iconRef.current.innerHTML = '';
+                    iconRef.current.appendChild(i);
+                    window.lucide.createIcons({ root: iconRef.current });
+                }
+            }, [name, className, size]);
+            return <span ref={iconRef} style={{ display: 'inline-flex', verticalAlign: 'middle' }}></span>;
+        };
+
+        // Sadece yapıştırma bırakıldı
+        const varsayilanFiyatlar = {
+            iscilik: { yapistirma: 1.00 }
+        };
+
+        function KutuHesaplama() {
+            // Temel Girdiler
+            const [koliBoy, setKoliBoy] = useState(600);
+            const [koliEn, setKoliEn] = useState(400);
+            const [koliYukseklik, setKoliYukseklik] = useState(400);
+            const [koliAdet, setKoliAdet] = useState(1000);
+            const [koliM2Fiyat, setKoliM2Fiyat] = useState(21);
+            const [koliDikis, setKoliDikis] = useState('yapistirma'); // Sabit
+
+            // Ayarlar & UI State
+            const [fiyatlar, setFiyatlar] = useState(varsayilanFiyatlar);
+            const [ayarlarAcik, setAyarlarAcik] = useState(false);
+            const [darkMode, setDarkMode] = useState(false);
+
+            // Sonuç State (Nakliye ve Klişe kaldırıldı)
+            const [koliSonuc, setKoliSonuc] = useState({
+                levhaEn: 0, levhaBoy: 0, isCiftParca: false, toplamLevhaAdeti: 0,
+                levhaM2: 0, toplamLevhaM2: 0, maliyetOndule: 0, maliyetDikis: 0,
+                toplamMaliyet: 0, birimMaliyet: 0,
+                rilEn: '', rilBoy: '', rilPayiEn: 0, rilPayiBoy: 0
+            });
+
+            useEffect(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 600);
+                }
+            }, []);
+
+            useEffect(() => {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    setDarkMode(true);
+                    document.documentElement.classList.add('dark');
+                } else {
+                    setDarkMode(false);
+                    document.documentElement.classList.remove('dark');
+                }
+            }, []);
+
+            const toggleDarkMode = () => {
+                if (darkMode) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    setDarkMode(false);
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    setDarkMode(true);
+                }
+            };
+
+            // LocalStorage Yükleme
+            useEffect(() => {
+                const kayitliFiyatlar = localStorage.getItem('kutu_fiyat_v19');
+                if (kayitliFiyatlar) {
+                    try { 
+                        const par = JSON.parse(kayitliFiyatlar);
+                        setFiyatlar({
+                            iscilik: { ...varsayilanFiyatlar.iscilik, ...(par.iscilik || {}) }
+                        }); 
+                    } catch (e) { }
+                }
+                const kayitliGirdiler = localStorage.getItem('kutu_girdiler_v19');
+                if (kayitliGirdiler) {
+                    try {
+                        const veri = JSON.parse(kayitliGirdiler);
+                        if(veri.koliEn) setKoliEn(veri.koliEn);
+                        if(veri.koliBoy) setKoliBoy(veri.koliBoy);
+                        if(veri.koliYukseklik) setKoliYukseklik(veri.koliYukseklik);
+                        if(veri.koliAdet) setKoliAdet(veri.koliAdet);
+                        if(veri.koliM2Fiyat !== undefined) setKoliM2Fiyat(veri.koliM2Fiyat);
+                        if(veri.koliDikis) setKoliDikis(veri.koliDikis);
+                    } catch(e) { }
+                }
+            }, []);
+
+            // LocalStorage Kaydetme
+            useEffect(() => {
+                const veriler = { 
+                    koliEn, koliBoy, koliYukseklik, koliAdet, koliM2Fiyat, koliDikis
+                };
+                localStorage.setItem('kutu_girdiler_v19', JSON.stringify(veriler));
+            }, [koliEn, koliBoy, koliYukseklik, koliAdet, koliM2Fiyat, koliDikis]);
+
+            const fiyatGuncelle = (kat, alt, val) => {
+                const yeni = { ...fiyatlar };
+                yeni[kat][alt] = Number(val);
+                setFiyatlar(yeni);
+            };
+
+            const fiyatKaydet = () => {
+                localStorage.setItem('kutu_fiyat_v19', JSON.stringify(fiyatlar));
+                setAyarlarAcik(false);
+                const toast = document.createElement('div');
+                toast.innerText = "Ayarlar başarıyla kaydedildi.";
+                toast.className = "fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-opacity duration-500 z-[9999]";
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+            };
+
+            useEffect(() => {
+                const boy = Number(koliBoy) || 0;
+                const en = Number(koliEn) || 0;
+                const yuk = Number(koliYukseklik) || 0;
+                const adet = Number(koliAdet) || 1;
+
+                // Standart FEFCO 0201 Ril (Katlama) Payları (mm cinsinden)
+                const kulakPayi_mm = 30;  // 3 cm sabit kulak
+                const rilPayiBoy_mm = 10; // Boy yönünde standart +1 cm (10mm) üretim payı
+
+                // Banker's Rounding (En yakın çift sayıya yuvarlama)
+                const bankersRound = (num) => {
+                    const d = num % 1;
+                    if (d === 0.5) {
+                        return (Math.floor(num) % 2 === 0) ? Math.floor(num) : Math.ceil(num);
+                    }
+                    return Math.round(num);
+                };
+
+                const kapak_mm = bankersRound((en / 2) + 3); 
+                const levhaEn_mm = kapak_mm + yuk + kapak_mm;
+                const hesaplananLevhaEn = levhaEn_mm / 10;
+                
+                let levhaBoy_mm = ((boy + en) * 2) + kulakPayi_mm + rilPayiBoy_mm;
+                let hesaplananLevhaBoy = levhaBoy_mm / 10;
+                
+                let ciftParca = false;
+                let ihtiyacLevhaAdeti = adet;
+
+                // 2700 mm (270 cm) limit kontrolü -> Otomatik Çift Parça
+                if (hesaplananLevhaBoy > 270.0) {
+                    ciftParca = true;
+                    levhaBoy_mm = boy + en + kulakPayi_mm + rilPayiBoy_mm;
+                    hesaplananLevhaBoy = levhaBoy_mm / 10;
+                    ihtiyacLevhaAdeti = adet * 2; 
+                }
+
+                // Ril Metinleri
+                const rilEnMetni = `${kapak_mm} / ${yuk} / ${kapak_mm}`;
+                const rilBoyMetni = ciftParca ? `${kulakPayi_mm} / ${boy} / ${en}` : `${kulakPayi_mm} / ${boy} / ${en} / ${boy} / ${en}`;
+
+                // Alan ve Toplam Levha M2
+                const tekLevhaM2 = (hesaplananLevhaEn * hesaplananLevhaBoy) / 10000;
+                const toplamM2 = tekLevhaM2 * ihtiyacLevhaAdeti;
+
+                // Fiyatlandırma
+                let onduleM2Fiyat = Number(koliM2Fiyat) || 0;
+                const maliyetOndule = toplamM2 * onduleM2Fiyat;
+
+                // Sadece yapıştırma dikkate alınır
+                let dikisBirim = fiyatlar.iscilik.yapistirma;
+
+                // Çift parçada 2 köşeden birleşim olacağı için işçilik x2
+                const birimDikisGideri = ciftParca ? (dikisBirim * 2) : dikisBirim;
+                const maliyetDikis = adet * birimDikisGideri;
+
+                const toplamMaliyet = maliyetOndule + maliyetDikis;
+                const birimMaliyet = adet > 0 ? (toplamMaliyet / adet) : 0;
+
+                setKoliSonuc({
+                    levhaEn: hesaplananLevhaEn,
+                    levhaBoy: hesaplananLevhaBoy,
+                    isCiftParca: ciftParca,
+                    toplamLevhaAdeti: ihtiyacLevhaAdeti,
+                    levhaM2: tekLevhaM2,
+                    toplamLevhaM2: toplamM2,
+                    maliyetOndule: maliyetOndule,
+                    maliyetDikis: maliyetDikis,
+                    toplamMaliyet: toplamMaliyet,
+                    birimMaliyet: birimMaliyet,
+                    rilEn: rilEnMetni,
+                    rilBoy: rilBoyMetni,
+                    rilPayiEn: 0,
+                    rilPayiBoy: ciftParca ? (rilPayiBoy_mm / 2) : rilPayiBoy_mm
+                });
+
+            }, [koliEn, koliBoy, koliYukseklik, koliAdet, koliM2Fiyat, koliDikis, fiyatlar]);
+
+            const paraFormat = (v) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(v || 0);
+            const sayiFormat = (v) => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(v || 0);
+            const koliBirim = (toplam) => (toplam || 0) / (Number(koliAdet) || 1);
+
+            return (
+                <div className="min-h-screen px-4 py-6 md:px-8 lg:px-12 max-w-[1600px] mx-auto transition-all animate-fade-in">
+                    
+                    {/* Header (Glassmorphism) */}
+                    <div className="glass-panel sticky top-4 z-40 rounded-3xl p-4 md:p-5 mb-8 flex justify-between items-center shadow-glass dark:shadow-glass-dark">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white transition-all shadow-glow bg-gradient-to-br from-orange-500 to-amber-600 shadow-glow-orange">
+                                <Icon name="package" size={24} />
+                            </div>
+                            <div>
+                                <h1 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">Koli <span className="font-medium text-slate-400">Pro</span></h1>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={toggleDarkMode} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all shadow-sm">
+                                {darkMode ? <Icon name="sun" size={20} /> : <Icon name="moon" size={20} />}
+                            </button>
+                            <button onClick={() => setAyarlarAcik(true)} className="flex items-center gap-2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-xl font-bold text-sm transition-transform hover:scale-105 shadow-md">
+                                <Icon name="settings-2" size={18} /> <span className="hidden sm:block">Ayarlar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        
+                        {/* LEFT COLUMN: Inputs */}
+                        <div className="lg:col-span-7 xl:col-span-8 space-y-6 animate-slide-up" style={{animationDelay: '0.1s'}}>
+                            
+                            {/* Card 1: Koli Ebatları */}
+                            <div className="bg-white/80 dark:bg-darkcard/90 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800/60">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl"><Icon name="maximize" size={20} /></div>
+                                    <h2 className="text-lg font-bold">Koli Ebatları & Adet</h2>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+                                    <div><label className="label-modern">Kutu Boy (mm)</label><input type="number" inputMode="decimal" value={koliBoy} onChange={e=>setKoliBoy(e.target.value)} className="input-modern border-orange-200 dark:border-orange-900/50 focus:ring-orange-500" /></div>
+                                    <div><label className="label-modern">Kutu En (mm)</label><input type="number" inputMode="decimal" value={koliEn} onChange={e=>setKoliEn(e.target.value)} className="input-modern border-orange-200 dark:border-orange-900/50 focus:ring-orange-500" /></div>
+                                    <div><label className="label-modern">Yükseklik (mm)</label><input type="number" inputMode="decimal" value={koliYukseklik} onChange={e=>setKoliYukseklik(e.target.value)} className="input-modern border-orange-200 dark:border-orange-900/50 focus:ring-orange-500" /></div>
+                                    <div><label className="label-modern">Sipariş (Adet)</label><input type="number" inputMode="decimal" value={koliAdet} onChange={e=>setKoliAdet(e.target.value)} className="input-modern text-orange-600 dark:text-orange-400 font-bold" /></div>
+                                </div>
+                            </div>
+
+                            {}
+                            {/* Card 2: Materyal & İşçilik */}
+                            <div className="bg-white/80 dark:bg-darkcard/90 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800/60">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl"><Icon name="layers" size={20} /></div>
+                                    <h2 className="text-lg font-bold">Materyal & İşçilik</h2>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Ondüle */}
+                                    <div className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/50">
+                                        <label className="label-modern">Levha m² Fiyatı (₺)</label>
+                                        <input type="number" step="0.01" inputMode="decimal" value={koliM2Fiyat} onChange={e=>setKoliM2Fiyat(e.target.value)} className="input-modern bg-white dark:bg-darkinput mb-4 focus:ring-orange-500" />
+                                    </div>
+
+                                    {/* İşçilik (Sadece Yapıştırma) */}
+                                    <div className="flex flex-col gap-4">
+                                        <div className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/50 h-full">
+                                            <label className="label-modern">Birleştirme</label>
+                                            <select value={koliDikis} onChange={e=>setKoliDikis(e.target.value)} className="input-modern appearance-none cursor-pointer focus:ring-orange-500">
+                                                <option value="yapistirma">Yapıştırma</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {}
+                        {/* RIGHT COLUMN: Results (Sticky) */}
+                        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-28 space-y-6 animate-slide-up" style={{animationDelay: '0.2s'}}>
+                            
+                            {/* Koli Grand Total Card */}
+                            <div className="relative overflow-hidden rounded-[2rem] p-8 shadow-2xl bg-gradient-to-br from-orange-600 to-amber-700 text-white group">
+                                <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-700">
+                                    <Icon name="package" size={120} />
+                                </div>
+                                <div className="absolute w-40 h-40 bg-orange-400 rounded-full blur-[80px] -bottom-10 -right-10 opacity-50"></div>
+
+                                <div className="relative z-10 flex flex-col gap-6">
+                                    <div>
+                                        <p className="text-orange-200 text-xs font-bold uppercase tracking-widest mb-2">Birim Koli Maliyeti</p>
+                                        <h3 className="text-5xl md:text-6xl font-black tracking-tight">{paraFormat(koliSonuc.birimMaliyet)}</h3>
+                                    </div>
+                                    
+                                    <div className="h-px bg-white/20 w-full my-2"></div>
+                                    
+                                    <div className="flex justify-between items-end">
+                                        <div>
+                                            <p className="text-orange-200 text-xs font-bold uppercase tracking-widest mb-1">Toplam Tutar</p>
+                                            <h4 className="text-3xl font-bold">{paraFormat(koliSonuc.toplamMaliyet)}</h4>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="inline-block px-3 py-1 bg-black/20 rounded-lg text-xs font-semibold backdrop-blur-md">
+                                                {sayiFormat(koliAdet)} Adet
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Koli Breakdown Receipt List */}
+                            <div className="bg-white/80 dark:bg-darkcard/90 backdrop-blur-xl rounded-[2rem] p-6 shadow-sm border border-slate-200 dark:border-slate-800/60">
+                                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 px-2 flex items-center gap-2">
+                                    <Icon name="receipt" size={16} className="text-orange-500"/> Maliyet Kırılımı
+                                </h3>
+                                
+                                <div className="flex justify-between items-center py-2 px-3 mb-2 bg-slate-100 dark:bg-slate-800/50 rounded-xl">
+                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 w-2/5 uppercase tracking-wider">Gider Kalemi</span>
+                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 w-1/4 text-right uppercase tracking-wider">Birim (Ort)</span>
+                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 w-1/3 text-right uppercase tracking-wider">Toplam</span>
+                                </div>
+
+                                <div className="space-y-1">
+                                    {[
+                                        { label: 'Ondüle Levha', val: koliSonuc.maliyetOndule, unit: koliBirim(koliSonuc.maliyetOndule), show: true, note: `${sayiFormat(koliSonuc.toplamLevhaM2)} m²` },
+                                        { label: 'Birleştirme (Yapıştırma)', val: koliSonuc.maliyetDikis, unit: koliBirim(koliSonuc.maliyetDikis), show: true, note: koliSonuc.isCiftParca ? "Çift Parça (x2)" : "Tek Parça" },
+                                    ].map((item, idx) => item.show && (
+                                        <div key={idx} className="flex justify-between items-center py-3 px-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800/50 last:border-0">
+                                            <div className="flex flex-col w-2/5 pr-2">
+                                                <span className={`text-sm font-semibold ${item.color || 'text-slate-700 dark:text-slate-300'}`}>
+                                                    {item.label}
+                                                </span>
+                                                {item.note && <span className="text-[10px] text-slate-400 font-medium mt-0.5">{item.note}</span>}
+                                            </div>
+                                            <div className="w-1/4 text-right">
+                                                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium">{paraFormat(item.unit)}</span>
+                                            </div>
+                                            <div className="w-1/3 text-right">
+                                                <span className={`text-sm font-bold font-mono ${item.color || 'text-slate-800 dark:text-slate-200'}`}>{paraFormat(item.val)}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {}
+                    {/* SETTINGS MODAL */}
+                    {ayarlarAcik && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-md" onClick={()=>setAyarlarAcik(false)}>
+                            <div className="bg-white/95 dark:bg-darkcard/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/20 dark:border-slate-700 w-full max-w-xl max-h-[90vh] flex flex-col transform transition-all animate-slide-up" onClick={e=>e.stopPropagation()}>
+                                
+                                <div className="p-6 md:p-8 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30 rounded-t-[2rem]">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg"><Icon name="sliders" size={20} /></div>
+                                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Koli Parametreleri</h2>
+                                    </div>
+                                    <button onClick={()=>setAyarlarAcik(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-200/50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"><Icon name="x" size={20} /></button>
+                                </div>
+                                
+                                <div className="p-6 md:p-8 overflow-y-auto space-y-8 custom-scrollbar">
+
+                                    {/* İşçilik */}
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2 uppercase tracking-wider"><Icon name="hammer" size={16} className="text-slate-400" /> Birleştirme İşçilik (Adet/₺)</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="label-modern">Yapıştırma Bedeli</label>
+                                                <input type="number" step="0.01" value={fiyatlar.iscilik.yapistirma} onChange={e=>fiyatGuncelle('iscilik','yapistirma',e.target.value)} className="input-modern font-mono text-sm focus:ring-orange-500" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                
+                                <div className="p-6 md:p-8 border-t border-slate-200 dark:border-slate-800 flex flex-col justify-end gap-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-b-[2rem]">
+                                    <button onClick={fiyatKaydet} className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold transition-colors shadow-glow-orange flex items-center justify-center gap-2"><Icon name="check" size={18} /> Ayarları Kaydet</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ErrorBoundary><KutuHesaplama /></ErrorBoundary>);
+    </script>
+</body>
+</html>
